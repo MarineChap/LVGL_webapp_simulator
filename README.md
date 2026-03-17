@@ -2,7 +2,7 @@
 
 This dashboard is a **generic previewer** for the LVGL simulator. It is designed to be completely decoupled from the project's source code by using a dynamic discovery mechanism.
 
-## 🏗️ Agnostic Architecture
+## 🏗️ Architecture
 
 Unlike traditional apps with hardcoded configurations, this dashboard uses a **Manifest-Driven Discovery** system:
 
@@ -15,20 +15,15 @@ You never need to touch the React code. Simply:
 - Add a new entry to the `manifest.json`.
 - Upload the `.js` and `.wasm` files to the corresponding folder in `/assets/`.
 
-## 🤖 CI/CD Automation
+## 🛠️ Local Development 
 
-The provided GitHub Action (`.github/workflows/build_simulator.yml`) handles this automatically:
-- It compiles the simulator for each flavor.
-- It pushes the binaries to the `gh-pages` branch.
-- It **automatically updates** the `manifest.json` to include the new version.
+### Run the React UI
 
-## 🛠️ Local Development
+```bash
+./run_web_app.sh
+```
 
-1.  **Run the React UI**:
-    ```bash
-    ./run_web_app.sh
-    ```
-### 2. Manual WASM Build (Simulator Release)
+### Manual WASM Build (Simulator Release)
 To compile the simulator for the web manually, you need the **Emscripten SDK (emsdk)** installed.
 
 #### Prerequisites:
@@ -52,8 +47,10 @@ cd simulator
 ```
 This generates `lvgl_sim.js` and `lvgl_sim.wasm` in `simulator/build_wasm_system1/`.
 
-b#### Testing Locally:
-To test your build in the web app locally:
+You can find the build script in `simulator_pipeline/build_wasm.sh`.
+
+#### Release the build to the web app locally:
+
 1.  Copy the generated files to the web app's public assets:
     ```bash
     mkdir -p web_simulator/public/assets/local/system1
@@ -62,6 +59,20 @@ To test your build in the web app locally:
 2.  Add a "local" entry to your `web_simulator/public/manifest.json`.
 3.  Refresh the web app.
 
-## 📂 Deployment
+## 📂 Web app Deployment
 
-Pushing a git tag (e.g., `v1.2.0`) will trigger a full build and update the dashboard dynamically for all users.
+### 🤖 CI/CD Automation for simulator release
+
+The provided GitHub Action (`.github/workflows/build_simulator.yml`) handles this automatically:
+- It compiles the simulator for each flavor.
+- It pushes the binaries to the `gh-pages` branch.
+- It **automatically updates** the `manifest.json` to include the new version.
+
+You can find the CI/CD pipeline in `simulator_pipeline/build_simulator.yml`. You need to add it in the repository containing the simulator source code.
+
+To release a simulator, you need to create a tag with the prefix `sim` (e.g., `sim1.0.0`).
+
+
+### 🤖 CI/CD Automation for web app release
+
+Pushing a commit to the `main` branch will trigger a full build and update the dashboard dynamically for all users.

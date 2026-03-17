@@ -14,10 +14,15 @@ function App() {
       .then(res => res.json())
       .then(data => {
         setManifest(data)
-        const firstVersion = Object.keys(data.versions)[0]
-        setVersion(firstVersion)
-        setFlavor(data.versions[firstVersion][0])
-        setStatus('Ready')
+        const versions = Object.keys(data.versions || {});
+        if (versions.length > 0) {
+          const firstVersion = versions[0]
+          setVersion(firstVersion)
+          setFlavor(data.versions[firstVersion][0])
+          setStatus('Ready')
+        } else {
+          setStatus('Error: No versions found in manifest')
+        }
       })
       .catch(err => {
         console.error('Failed to load manifest:', err)
@@ -77,8 +82,8 @@ function App() {
 
         <div className="control-group">
           <label>System name</label>
-          <select value={flavor} disabled={isRunning} onChange={(e) => setFlavor(e.target.value)}>
-            {manifest.versions[version].map(f => (
+          <select value={flavor} disabled={isRunning || !version} onChange={(e) => setFlavor(e.target.value)}>
+            {(manifest.versions[version] || []).map(f => (
               <option key={f} value={f}>{f}</option>
             ))}
           </select>
@@ -86,7 +91,7 @@ function App() {
 
         <div className="actions">
           {!isRunning ? (
-            <button className="btn btn-start" onClick={handleRun}>
+            <button className="btn btn-start" onClick={handleRun} disabled={!version || !flavor}>
               <span>▶</span> Start Simulator
             </button>
           ) : (

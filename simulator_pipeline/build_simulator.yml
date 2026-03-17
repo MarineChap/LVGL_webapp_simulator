@@ -1,0 +1,102 @@
+name: Build LVGL Simulator (WASM)
+
+on:
+  push:
+    tags:
+      - 'sim*'
+  workflow_dispatch:
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flavor: [system1, ....]
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Install SDL2
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+
+      - name: Clone LVGL
+        run: git clone --branch v9.1.0 --depth 1 https://github.com/lvgl/lvgl.git simulator/lvgl
+
+      - name: Build WASM
+        run: |
+          chmod +x simulator/build_wasm.sh
+          ./simulator/build_wasm.sh ${{ matrix.flavor }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.flavor }}
+          path: |
+            simulator/build_wasm_${{ matrix.flavor }}/lvgl_sim.js
+            simulator/build_wasm_${{ matrix.flavor }}/lvgl_sim.wasm
+
+  deploy:
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    environment: DEPLOY_PAT
+    steps:
+      - name: Checkout Web App Repo
+        uses: actions/checkout@v4
+        with:
+          repository: MarineChap/LVGL_webapp_simulator
+          ref: main
+          path: webapp
+          token: ${{ secrets.DEPLOY_PAT }}
+
+      - name: Ensure Assets Directory exists
+        run: mkdir -p webapp/public/assets
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: new_builds
+
+      - name: Update Manifest and Assets
+        run: |
+          VERSION=${{ github.ref_name }}
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then VERSION="latest"; fi
+          
+          mkdir -p webapp/public/assets/$VERSION
+          
+          # Move new builds to versioned folders
+          FLAVORS=()
+          for f in new_builds/*; do
+            FLAVOR=$(basename $f)
+            mkdir -p webapp/public/assets/$VERSION/$FLAVOR
+            cp $f/lvgl_sim.* webapp/public/assets/$VERSION/$FLAVOR/
+            FLAVORS+=("\"$FLAVOR\"")
+          done
+          
+          # Update manifest.json (agnostic approach)
+          FLAVOR_LIST=$(IFS=,; echo "${FLAVORS[*]}")
+          python3 -c "
+          import json, os
+          path = 'webapp/public/manifest.json'
+          manifest = json.load(open(path)) if os.path.exists(path) else {'versions': {}}
+          manifest['versions']['$VERSION'] = [f.strip('\"') for f in [$FLAVOR_LIST]]
+          with open(path, 'w') as f: json.dump(manifest, f, indent=2)
+          "
+
+      - name: Commit and Push to Web App Main
+        run: |
+          cd webapp
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/assets public/manifest.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update simulator assets from espressif_template_project ${{ github.ref_name }}"
+            git push origin main
+          fi
