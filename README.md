@@ -48,16 +48,16 @@ Once `emsdk` is in your path, use the provided helper script:
 ```bash
 # General syntax: ./simulator/build_wasm.sh <flavor>
 cd simulator
-./build_wasm.sh azote
+./build_wasm.sh system1
 ```
-This generates `lvgl_sim.js` and `lvgl_sim.wasm` in `simulator/build_wasm_azote/`.
+This generates `lvgl_sim.js` and `lvgl_sim.wasm` in `simulator/build_wasm_system1/`.
 
 b#### Testing Locally:
 To test your build in the web app locally:
 1.  Copy the generated files to the web app's public assets:
     ```bash
-    mkdir -p web_simulator/public/assets/local/azote
-    cp simulator/build_wasm_azote/lvgl_sim.* web_simulator/public/assets/local/azote/
+    mkdir -p web_simulator/public/assets/local/system1
+    cp simulator/build_wasm_system1/lvgl_sim.* web_simulator/public/assets/local/system1/
     ```
 2.  Add a "local" entry to your `web_simulator/public/manifest.json`.
 3.  Refresh the web app.
