@@ -1,3 +1,11 @@
 {
-    "versions": {}
+  "versions": {
+    "sim.1.0.6": [
+      "system1",
+      "system2",
+      "system3",
+      "system4",
+      "system5"
+    ]
+  }
 }
