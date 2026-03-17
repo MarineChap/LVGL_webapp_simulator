@@ -10,7 +10,7 @@ function App() {
   const canvasRef = useRef(null)
 
   useEffect(() => {
-    fetch('/manifest.json')
+    fetch(`${import.meta.env.BASE_URL}manifest.json`)
       .then(res => res.json())
       .then(data => {
         setManifest(data)
@@ -43,7 +43,7 @@ function App() {
 
     const script = document.createElement('script');
     script.id = 'simulator-script';
-    script.src = `/assets/${version}/${flavor}/lvgl_sim.js`;
+    script.src = `${import.meta.env.BASE_URL}assets/${version}/${flavor}/lvgl_sim.js`;
     document.body.appendChild(script);
   }
 
