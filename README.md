@@ -20,7 +20,9 @@ You never need to touch the React code. Simply:
 ### Run the React UI
 
 ```bash
-./run_web_app.sh
+cd web_simulator
+npm install
+npm run dev
 ```
 
 ### Manual WASM Build (Simulator Release)
