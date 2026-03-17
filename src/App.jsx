@@ -59,7 +59,7 @@ function App() {
     <div className="App">
       <header className="header">
         <h1>LVGL UI Simulator</h1>
-        <p>Project ....</p>
+        <p>Project from the espressif_template_project used as an example</p>
       </header>
 
       <div className="controls">
